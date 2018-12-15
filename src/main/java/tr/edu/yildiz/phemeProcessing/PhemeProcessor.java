@@ -1,22 +1,25 @@
 package tr.edu.yildiz.phemeProcessing;
 
-import com.fasterxml.jackson.databind.*;
-import org.apache.commons.lang.StringUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.log4j.Logger;
 import tr.edu.yildiz.phemeProcessing.pojos.Annotations;
 import tr.edu.yildiz.phemeProcessing.pojos.Tweet;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class PhemeProcessor {
+    final static Logger logger = Logger.getLogger(PhemeProcessor.class);
 
 
     public static void main(String[] args) {
 
         PhemeProcessor phemeProcessor = new PhemeProcessor();
         ObjectMapper objectMapper = new ObjectMapper();
-
 
         //start by loading annotation files to determine the threads
         File annotationsFile = new File("C:\\Users\\jehad\\Desktop\\phemeProcessor\\phemeDataset/annotations/original_en-scheme-annotations.json");
@@ -30,16 +33,18 @@ public class PhemeProcessor {
                 if (line.startsWith("#")) continue;
                 annotationsList.add(objectMapper.readValue(line, Annotations.class));
             }
-            System.out.println("Finished importing main annotations file");
-            System.out.println("number of annotations imported: " + annotationsList.size());
-            System.out.println("First annotation imported is: " + annotationsList.get(0).toString());
-            System.out.println("Last annotation imported: " + annotationsList.get(annotationsList.size() - 1).toString());
+            logger.info("Finished importing main annotations file");
+            logger.info("number of annotations imported: " + annotationsList.size());
+            logger.info("First annotation imported is: " + annotationsList.get(0).toString());
+            logger.info("Last annotation imported: " + annotationsList.get(annotationsList.size() - 1).toString());
             phemeProcessor.readMainTweet(annotationsList.get(0));
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+
         }
 
 
@@ -60,20 +65,30 @@ public class PhemeProcessor {
                 tweetFileString = tweetFileString.concat(line);
             }
             mainTweet = objectMapper.readValue(tweetFileString, Tweet.class);
-            System.out.println("Finished importing main Tweet file");
-            System.out.println("Main Tweet JSON file");
-            System.out.println(mainTweet.toString());
+            logger.info("Finished importing main Tweet file");
+            logger.info("Main Tweet JSON file");
+            logger.info(mainTweet.toString());
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.print("Number of Favs");
-        System.out.println(mainTweet.getFavoriteCount());
-        System.out.print("Number of Retweets");
-        System.out.println(mainTweet.getRetweetCount());
+        logger.info("Number of Favs" + mainTweet.getFavoriteCount());
+        logger.info("Number of Retweets:" + mainTweet.getRetweetCount());
         return mainTweet;
 
+        //TODO extract this method to obtain all tweets main and replies
+
+    }
+
+    public List<Tweet> getReactions() {
+        //TODO implement this!
+        return Collections.emptyList();
+    }
+
+    public Map<Pair<String, String>, Annotations> getAllAnnotations() {
+        //TODO implement this for the map will be needed to determine the polarity of reactions on main tweet
+        return Collections.EMPTY_MAP;
     }
 }
