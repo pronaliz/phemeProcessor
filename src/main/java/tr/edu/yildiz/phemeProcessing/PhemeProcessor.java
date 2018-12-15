@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Logger;
 import tr.edu.yildiz.phemeProcessing.pojos.Annotations;
+import tr.edu.yildiz.phemeProcessing.pojos.ReplyAnnotation;
 import tr.edu.yildiz.phemeProcessing.pojos.Tweet;
 
 import java.io.*;
@@ -40,7 +41,7 @@ public class PhemeProcessor {
             logger.info("number of annotations imported: " + annotationsList.size());
             logger.info("First annotation imported is: " + annotationsList.get(0).toString());
             logger.info("Last annotation imported: " + annotationsList.get(annotationsList.size() - 1).toString());
-            phemeProcessor.getAllAnnotations(datasetPath);
+            Map<Pair<String, String>, ReplyAnnotation> replyAnnotationMap = phemeProcessor.getAllAnnotations(datasetPath);
 
             //test
             String tweetPath = datasetPath + "threads/en/" + annotationsList.get(0).getEvent() + "/" + annotationsList.get(0).getThreadid();
@@ -49,7 +50,14 @@ public class PhemeProcessor {
             List<Tweet> reactions = phemeProcessor.getReactions(annotationsList.get(0), datasetPath);
 
             phemeProcessor.getPopularity(mainTweet);
-            List<Double> popularity = reactions.stream().map(phemeProcessor::getPopularity).collect(Collectors.toList());
+            List<Double> popularity = reactions.stream().map(tweet -> {
+                ReplyAnnotation replyAnnotation = replyAnnotationMap.get(Pair.of(tweet.getInReplyToStatusIdStr(), tweet.getIdStr()));
+                if (replyAnnotation.getResponsetypeVsSource().equals("disagreed")) {
+                    return -Math.abs(phemeProcessor.getPopularity(tweet));
+                }
+                return Math.abs(phemeProcessor.getPopularity(tweet));
+
+            }).collect(Collectors.toList());
             logger.info("List of popularity Size: " + popularity.size());
             popularity.stream().forEach(logger::info);
 
@@ -109,20 +117,20 @@ public class PhemeProcessor {
         return reactions;
     }
 
-    public Map<Pair<String, String>, Annotations> getAllAnnotations(String datasetPath) {
+    public Map<Pair<String, String>, ReplyAnnotation> getAllAnnotations(String datasetPath) {
         File annotationsFile = new File(datasetPath + "annotations/en-scheme-annotations.json");
         ObjectMapper objectMapper = new ObjectMapper();
-        Map<Pair<String, String>, Annotations> annotationsMap = null;
+        Map<Pair<String, String>, ReplyAnnotation> annotationsMap = null;
         try {
             FileInputStream fileInputStream = new FileInputStream(annotationsFile);
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
 
             String line = null;
-            annotationsMap = new HashMap<Pair<String, String>, Annotations>();
+            annotationsMap = new HashMap<Pair<String, String>, ReplyAnnotation>();
             while ((line = bufferedReader.readLine()) != null) {
                 if (line.startsWith("#")) continue;
-                annotationsMap.put(Pair.of((objectMapper.readValue(line, Annotations.class)).getThreadid(),
-                        (objectMapper.readValue(line, Annotations.class)).getTweetid()), (objectMapper.readValue(line, Annotations.class)));
+                annotationsMap.put(Pair.of((objectMapper.readValue(line, ReplyAnnotation.class)).getThreadid(),
+                        (objectMapper.readValue(line, Annotations.class)).getTweetid()), (objectMapper.readValue(line, ReplyAnnotation.class)));
             }
             logger.info("Finished importing all annotations file");
             logger.info("number of annotations imported: " + annotationsMap.size());
