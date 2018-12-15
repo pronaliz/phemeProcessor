@@ -7,10 +7,15 @@ import tr.edu.yildiz.phemeProcessing.pojos.Annotations;
 import tr.edu.yildiz.phemeProcessing.pojos.Tweet;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class PhemeProcessor {
     final static Logger logger = Logger.getLogger(PhemeProcessor.class);
+    final static String SOURCE = "source-tweets";
+    final static String REACTION = "reactions";
 
 
     public static void main(String[] args) {
@@ -35,7 +40,12 @@ public class PhemeProcessor {
             logger.info("First annotation imported is: " + annotationsList.get(0).toString());
             logger.info("Last annotation imported: " + annotationsList.get(annotationsList.size() - 1).toString());
             phemeProcessor.getAllAnnotations(datasetPath);
-            phemeProcessor.getTweet(annotationsList.get(0), datasetPath);
+
+            //test
+            String tweetPath = datasetPath + "threads/en/" + annotationsList.get(0).getEvent() + "/" + annotationsList.get(0).getThreadid();
+            File mainTweetJSONFile = new File(tweetPath + "/" + SOURCE + "/" + annotationsList.get(0).getThreadid() + ".json");
+            Tweet mainTweet = phemeProcessor.getTweet(mainTweetJSONFile);
+            phemeProcessor.getReactions(annotationsList.get(0), datasetPath);
 
 
         } catch (FileNotFoundException e) {
@@ -49,13 +59,11 @@ public class PhemeProcessor {
 
     }
 
-    public Tweet getTweet(Annotations annotations, String datasetPath) {
+    public Tweet getTweet(File tweetJSONFile) {
         ObjectMapper objectMapper = new ObjectMapper();
         Tweet tweet = null;
-        String mainTweetPath = datasetPath + "threads/en/" + annotations.getEvent() + "/" + annotations.getThreadid();
-        File mainTweetJSONFile = new File(mainTweetPath + "/source-tweets/" + annotations.getThreadid() + ".json");
         try {
-            FileInputStream fileInputStream = new FileInputStream(mainTweetJSONFile);
+            FileInputStream fileInputStream = new FileInputStream(tweetJSONFile);
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
             String tweetFileString = "";
             String line = null;
@@ -64,7 +72,7 @@ public class PhemeProcessor {
                 tweetFileString = tweetFileString.concat(line);
             }
             tweet = objectMapper.readValue(tweetFileString, Tweet.class);
-            logger.info("Finished importing main Tweet file");
+            logger.info("Finished importing tweet file");
             logger.info("Tweet JSON file " + tweet.toString());
 
 
@@ -73,17 +81,22 @@ public class PhemeProcessor {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        logger.info("Number of Favs" + tweet.getFavoriteCount());
+        logger.info("Number of Favs: " + tweet.getFavoriteCount());
         logger.info("Number of Retweets:" + tweet.getRetweetCount());
         return tweet;
-
-        //TODO extract this method to obtain all tweets main and replies
-
     }
 
-    public List<Tweet> getReactions() {
-        //TODO implement this!
-        return Collections.emptyList();
+    public List<Tweet> getReactions(Annotations annotations, String datasetPath) {
+        String reactionPath = datasetPath + "threads/en/" + annotations.getEvent() + "/" + annotations.getThreadid() + "/";
+        File reactionsFolder = new File(reactionPath + REACTION);
+        List<Tweet> reactions = new ArrayList<Tweet>();
+        for (File tweetReaction : reactionsFolder.listFiles()) {
+            //logger.info("List of Reaction JSON Tweet files");
+            //logger.info(reactionsFolder.list());
+            reactions.add(getTweet(tweetReaction));
+        }
+        logger.info("Number of Reactions: " + reactions.size());
+        return reactions;
     }
 
     public Map<Pair<String, String>, Annotations> getAllAnnotations(String datasetPath) {
