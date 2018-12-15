@@ -51,7 +51,7 @@ public class PhemeProcessor {
 
     public Tweet getTweet(Annotations annotations, String datasetPath) {
         ObjectMapper objectMapper = new ObjectMapper();
-        Tweet mainTweet = null;
+        Tweet tweet = null;
         String mainTweetPath = datasetPath + "threads/en/" + annotations.getEvent() + "/" + annotations.getThreadid();
         File mainTweetJSONFile = new File(mainTweetPath + "/source-tweets/" + annotations.getThreadid() + ".json");
         try {
@@ -63,19 +63,19 @@ public class PhemeProcessor {
 
                 tweetFileString = tweetFileString.concat(line);
             }
-            mainTweet = objectMapper.readValue(tweetFileString, Tweet.class);
+            tweet = objectMapper.readValue(tweetFileString, Tweet.class);
             logger.info("Finished importing main Tweet file");
-            logger.info("Main Tweet JSON file");
-            logger.info(mainTweet.toString());
+            logger.info("Tweet JSON file " + tweet.toString());
+
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        logger.info("Number of Favs" + mainTweet.getFavoriteCount());
-        logger.info("Number of Retweets:" + mainTweet.getRetweetCount());
-        return mainTweet;
+        logger.info("Number of Favs" + tweet.getFavoriteCount());
+        logger.info("Number of Retweets:" + tweet.getRetweetCount());
+        return tweet;
 
         //TODO extract this method to obtain all tweets main and replies
 
