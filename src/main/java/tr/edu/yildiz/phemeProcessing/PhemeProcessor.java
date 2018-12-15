@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class PhemeProcessor {
     final static Logger logger = Logger.getLogger(PhemeProcessor.class);
@@ -20,7 +21,7 @@ public class PhemeProcessor {
 
     public static void main(String[] args) {
 
-        PhemeProcessor phemeProcessor = new PhemeProcessor();
+        final PhemeProcessor phemeProcessor = new PhemeProcessor();
         ObjectMapper objectMapper = new ObjectMapper();
         String datasetPath = "C:\\Users\\jehad\\Desktop\\phemeProcessor\\phemeDataset/";
         //start by loading annotation files to determine the threads
@@ -45,8 +46,12 @@ public class PhemeProcessor {
             String tweetPath = datasetPath + "threads/en/" + annotationsList.get(0).getEvent() + "/" + annotationsList.get(0).getThreadid();
             File mainTweetJSONFile = new File(tweetPath + "/" + SOURCE + "/" + annotationsList.get(0).getThreadid() + ".json");
             Tweet mainTweet = phemeProcessor.getTweet(mainTweetJSONFile);
-            phemeProcessor.getReactions(annotationsList.get(0), datasetPath);
+            List<Tweet> reactions = phemeProcessor.getReactions(annotationsList.get(0), datasetPath);
 
+            phemeProcessor.getPopularity(mainTweet);
+            List<Double> popularity = reactions.stream().map(phemeProcessor::getPopularity).collect(Collectors.toList());
+            logger.info("List of popularity Size: " + popularity.size());
+            popularity.stream().forEach(logger::info);
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -57,6 +62,11 @@ public class PhemeProcessor {
         }
 
 
+    }
+
+    public double getPopularity(Tweet tweet) {
+        return (double) (tweet.getUser().getFollowersCount() - tweet.getUser().getFriendsCount())
+                / (double) (tweet.getUser().getFollowersCount() + tweet.getUser().getFriendsCount());
     }
 
     public Tweet getTweet(File tweetJSONFile) {
