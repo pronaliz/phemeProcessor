@@ -7,10 +7,7 @@ import tr.edu.yildiz.phemeProcessing.pojos.Annotations;
 import tr.edu.yildiz.phemeProcessing.pojos.Tweet;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class PhemeProcessor {
     final static Logger logger = Logger.getLogger(PhemeProcessor.class);
@@ -20,9 +17,9 @@ public class PhemeProcessor {
 
         PhemeProcessor phemeProcessor = new PhemeProcessor();
         ObjectMapper objectMapper = new ObjectMapper();
-
+        String datasetPath = "C:\\Users\\jehad\\Desktop\\phemeProcessor\\phemeDataset/";
         //start by loading annotation files to determine the threads
-        File annotationsFile = new File("C:\\Users\\jehad\\Desktop\\phemeProcessor\\phemeDataset/annotations/original_en-scheme-annotations.json");
+        File annotationsFile = new File(datasetPath + "annotations/original_en-scheme-annotations.json");
         try {
             FileInputStream fileInputStream = new FileInputStream(annotationsFile);
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
@@ -37,7 +34,9 @@ public class PhemeProcessor {
             logger.info("number of annotations imported: " + annotationsList.size());
             logger.info("First annotation imported is: " + annotationsList.get(0).toString());
             logger.info("Last annotation imported: " + annotationsList.get(annotationsList.size() - 1).toString());
-            phemeProcessor.readMainTweet(annotationsList.get(0));
+            phemeProcessor.getAllAnnotations(datasetPath);
+            phemeProcessor.getTweet(annotationsList.get(0), datasetPath);
+
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -50,10 +49,10 @@ public class PhemeProcessor {
 
     }
 
-    public Tweet readMainTweet(Annotations annotations) {
+    public Tweet getTweet(Annotations annotations, String datasetPath) {
         ObjectMapper objectMapper = new ObjectMapper();
         Tweet mainTweet = null;
-        String mainTweetPath = "C:\\Users\\jehad\\Desktop\\phemeProcessor\\phemeDataset/threads/en/" + annotations.getEvent() + "/" + annotations.getThreadid();
+        String mainTweetPath = datasetPath + "threads/en/" + annotations.getEvent() + "/" + annotations.getThreadid();
         File mainTweetJSONFile = new File(mainTweetPath + "/source-tweets/" + annotations.getThreadid() + ".json");
         try {
             FileInputStream fileInputStream = new FileInputStream(mainTweetJSONFile);
@@ -87,8 +86,30 @@ public class PhemeProcessor {
         return Collections.emptyList();
     }
 
-    public Map<Pair<String, String>, Annotations> getAllAnnotations() {
-        //TODO implement this for the map will be needed to determine the polarity of reactions on main tweet
-        return Collections.EMPTY_MAP;
+    public Map<Pair<String, String>, Annotations> getAllAnnotations(String datasetPath) {
+        File annotationsFile = new File(datasetPath + "annotations/en-scheme-annotations.json");
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<Pair<String, String>, Annotations> annotationsMap = null;
+        try {
+            FileInputStream fileInputStream = new FileInputStream(annotationsFile);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
+
+            String line = null;
+            annotationsMap = new HashMap<Pair<String, String>, Annotations>();
+            while ((line = bufferedReader.readLine()) != null) {
+                if (line.startsWith("#")) continue;
+                annotationsMap.put(Pair.of((objectMapper.readValue(line, Annotations.class)).getThreadid(),
+                        (objectMapper.readValue(line, Annotations.class)).getTweetid()), (objectMapper.readValue(line, Annotations.class)));
+            }
+            logger.info("Finished importing all annotations file");
+            logger.info("number of annotations imported: " + annotationsMap.size());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+
+        }
+        return annotationsMap;
     }
 }
