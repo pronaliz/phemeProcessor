@@ -28,7 +28,7 @@ public class PhemeProcessor {
             e.printStackTrace();
         }
         StringBuilder builder = new StringBuilder();
-        String ColumnNamesList = "Thread ID,Distance From Positivity, Thread Certainity";
+        String ColumnNamesList = "Thread ID,Distance From Positivity, Thread Certainity, Number of Interactions";
         // No need give the headers Like: id, Name on builder.append
         builder.append(ColumnNamesList + "\n");
         final PhemeProcessor phemeProcessor = new PhemeProcessor();
@@ -67,7 +67,7 @@ public class PhemeProcessor {
                 double mainTweetPopularity = phemeProcessor.getPopularity(mainTweet);
                 List<Double> popularity = reactions.stream().filter(tweet -> {
                     ReplyAnnotation replyAnnotation = replyAnnotationMap.get(Pair.of(mainTweet.getIdStr(), tweet.getIdStr()));
-                    return replyAnnotation != null && replyAnnotation.getResponsetypeVsSource().equals("comment");
+                    return replyAnnotation != null && !replyAnnotation.getResponsetypeVsSource().equals("comment");
                 }).map(tweet -> {
                     ReplyAnnotation replyAnnotation = replyAnnotationMap.get(Pair.of(mainTweet.getIdStr(), tweet.getIdStr()));
 
@@ -91,7 +91,8 @@ public class PhemeProcessor {
                 }
                 builder.append(mainTweet.getIdStr() + ",");
                 builder.append(distanceFromPosititvity + ",");
-                builder.append(annotationsMap.get(mainTweet.getIdStr()).getCertainty());
+                builder.append(annotationsMap.get(mainTweet.getIdStr()).getCertainty() + ",");
+                builder.append(reactions.size());
                 builder.append('\n');
 
                 logger.info("#################################################");
@@ -100,6 +101,12 @@ public class PhemeProcessor {
                 logger.info("#################################################");
 
             }
+
+            logger.info("#################################################");
+            logger.info("############### - Final Report - ################");
+            logger.info(builder.toString());
+            logger.info("############### - Final Report End - ###############");
+            logger.info("#################################################");
             pw.write(builder.toString());
             pw.close();
 
