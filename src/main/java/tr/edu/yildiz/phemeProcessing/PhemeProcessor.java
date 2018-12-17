@@ -102,7 +102,7 @@ public class PhemeProcessor {
                 builder.append(distanceFromPosititvity + ",");
                 builder.append(annotationsMap.get(mainTweet.getIdStr()).getCertainty() + ",");
                 builder.append(reactions.size() + ",");
-                builder.append(popularity.size() + ",");
+                builder.append(popularity.size());
                 builder.append('\n');
 
                 logger.info("#################################################");
