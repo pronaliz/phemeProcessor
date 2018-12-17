@@ -34,7 +34,7 @@ public class PhemeProcessor {
             e.printStackTrace();
         }
         StringBuilder builder = new StringBuilder();
-        String ColumnNamesList = "Thread ID,Distance From Positivity, Thread Certainity, Number of Interactions";
+        String ColumnNamesList = "Thread ID,Distance From Positivity, Thread Certainity, Number of Interactions, Number of effective reaction";
         // No need give the headers Like: id, Name on builder.append
         builder.append(ColumnNamesList + "\n");
         final PhemeProcessor phemeProcessor = new PhemeProcessor();
@@ -101,7 +101,8 @@ public class PhemeProcessor {
                 builder.append(mainTweet.getIdStr() + ",");
                 builder.append(distanceFromPosititvity + ",");
                 builder.append(annotationsMap.get(mainTweet.getIdStr()).getCertainty() + ",");
-                builder.append(reactions.size());
+                builder.append(reactions.size() + ",");
+                builder.append(popularity.size() + ",");
                 builder.append('\n');
 
                 logger.info("#################################################");
