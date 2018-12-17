@@ -7,7 +7,13 @@ import tr.edu.yildiz.phemeProcessing.pojos.Annotations;
 import tr.edu.yildiz.phemeProcessing.pojos.ReplyAnnotation;
 import tr.edu.yildiz.phemeProcessing.pojos.Tweet;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,7 +29,7 @@ public class PhemeProcessor {
     public static void main(String[] args) {
         PrintWriter pw = null;
         try {
-            pw = new PrintWriter(new File("C:\\Users\\jehad\\Desktop\\phemeProcessor\\phemeDataset/output.csv"));
+            pw = new PrintWriter(new File("C:\\Users\\jbaeth\\IdeaProjects\\phemeProcessor\\phemeDataset/output.csv"));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -33,7 +39,7 @@ public class PhemeProcessor {
         builder.append(ColumnNamesList + "\n");
         final PhemeProcessor phemeProcessor = new PhemeProcessor();
         ObjectMapper objectMapper = new ObjectMapper();
-        String datasetPath = "C:\\Users\\jehad\\Desktop\\phemeProcessor\\phemeDataset/";
+        String datasetPath = "C:\\Users\\jbaeth\\IdeaProjects\\phemeProcessor\\phemeDataset/";
         //start by loading annotation files to determine the threads
         File annotationsFile = new File(datasetPath + "annotations/original_en-scheme-annotations.json");
         try {
@@ -75,7 +81,8 @@ public class PhemeProcessor {
                             replyAnnotation.getResponsetypeVsSource().equals("appeal-for-more-information"))) {
                         return (-1 * Math.abs(phemeProcessor.getPopularity(tweet)));
                     } else {
-                        return Math.abs(phemeProcessor.getPopularity(tweet));
+                        //return Math.abs(phemeProcessor.getPopularity(tweet));
+                        return 0.0;
                     }
 
 
@@ -84,10 +91,12 @@ public class PhemeProcessor {
                 popularity.stream().forEach(logger::debug);
                 Double cumulativeCredibility = 0.0;
                 cumulativeCredibility = popularity.stream().mapToDouble(Math::abs).sum();
-                cumulativeCredibility += mainTweetPopularity;
-                double distanceFromPosititvity = mainTweetPopularity / Math.abs(cumulativeCredibility);
-                for (double creibility : popularity) {
-                    distanceFromPosititvity = distanceFromPosititvity + (creibility / Math.abs(cumulativeCredibility));
+                cumulativeCredibility = cumulativeCredibility + mainTweetPopularity;
+                double distanceFromPosititvity = 0.0;
+                //double distanceFromPosititvity = Math.abs(mainTweetPopularity) / Math.abs(cumulativeCredibility);
+                for (double credibility : popularity) {
+                    distanceFromPosititvity = distanceFromPosititvity + (credibility / Math.abs(cumulativeCredibility));
+                    logger.debug("Current Value of distance From positivity" + distanceFromPosititvity);
                 }
                 builder.append(mainTweet.getIdStr() + ",");
                 builder.append(distanceFromPosititvity + ",");
@@ -123,7 +132,7 @@ public class PhemeProcessor {
     }
 
     public double getPopularity(Tweet tweet) {
-        return (double) (tweet.getUser().getFollowersCount() - tweet.getUser().getFriendsCount())
+        return (double) Math.abs(tweet.getUser().getFollowersCount() - tweet.getUser().getFriendsCount())
                 / (double) (tweet.getUser().getFollowersCount() + tweet.getUser().getFriendsCount());
     }
 
